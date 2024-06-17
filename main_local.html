@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tetris</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+<script>
+    const config = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 0 },
+                debug: false
+            }
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+
+    let grid;
+    let currentBlock;
+    let nextBlock;
+    let score = 0;
+    let gameOver = false;
+
+    class Block extends Phaser.Physics.Arcade.Sprite {
+        constructor(scene, x, y, textureKey) {
+            super(scene, x, y, textureKey);
+            scene.add.existing(this);
+            scene.physics.matter.add.existing(this);
+        }
+    }
+
+    function preload() {
+        this.load.setBaseURL('http://labs.phaser.io');
+
+        this.load.image('sky', 'assets/skies/space3.png');
+        this.load.image('logo', 'assets/sprites/phaser3-logo.png');
+        this.load.image('red', 'assets/particles/red.png');
+        this.load.image('green', 'assets/particles/green.png');
+        this.load.image('blue', 'assets/particles/blue.png');
+        this.load.image('purple', 'assets/particles/purple.png');
+        this.load.image('block', 'assets/tilemaps/tiles/grid.png'); // Placeholder image for blocks
+        this.load.image('tetrimino', 'assets/tetriminos/tetrimino.png'); // Placeholder image for tetriminos
+    }
+
+    function create() {
+        // Background
+        this.add.image(400, 300, 'sky');
+
+        // Grid
+        grid = this.add.tileSprite(0, 0, 800, 600, 'block').setOrigin(0, 0).setTileIndex(0);
+
+        // Current block
+        currentBlock = new Block(this, 400, 0, 'tetrimino');
+        currentBlock.body.allowGravity = false;
+
+        // Next block
+        nextBlock = new Block(this, 750, 0, 'tetrimino');
+        nextBlock.body.allowGravity = false;
+
+        // Score text
+        scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+
+        // Collision detection
+        this.matter.world.on('collisionstart', function(event, bodyA, bodyB) {
+            if (!gameOver && bodyA.gameObject === currentBlock || bodyB.gameObject === currentBlock) {
+                // Stop the block and spawn a new one
+                currentBlock.body.stop();
+                spawnNewBlock();
+            }
+        });
+    }
+
+    function update() {
+        if (!gameOver) {
+            // Move the current block down every frame
+            currentBlock.y += 10;
+
+            // Check for collision with the ground
+            if (currentBlock.y > 600) {
+                gameOver = true;
+                scoreText.setText('Game Over');
+            }
+
+            // Check for line completion and clear lines
+            checkLines();
+
+            // Rotate the current block
+            if (Phaser.Input.Keyboard.JustDown(this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q))) {
+                currentBlock.angle += 90;
+            }
+
+            // Move the current block left or right
+            if (Phaser.Input.Keyboard.JustDown(this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT))) {
+                currentBlock.x -= 50;
+            } else if (Phaser.Input.Keyboard.JustDown(this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT))) {
+                currentBlock.x += 50;
+            }
+        }
+    }
+
+    function spawnNewBlock() {
+        // Randomly select a new block
+        let blockType = Math.floor(Math.random() * 7); // Assuming 7 different block types
+
+        // Position the new block
+        currentBlock.setPosition(400, 0);
+
+        // Update the next block preview
+        nextBlock.setTexture(`tetrimino${blockType}`);
+    }
+
+    function checkLines() {
+        // Implementation for checking and clearing completed lines
+        // This is a placeholder function and needs to be expanded
+    }
+</script>
+</body>
+</html>
